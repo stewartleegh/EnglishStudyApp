@@ -3,3 +3,5 @@
 读取D:\ai coder\Projects\EnglishStudyApp\PRD\开发任务清单.md。我执行了 T-0101，请审查该任务的代码，对审查出来的问题进行修复，并重新执行冒烟测试，确保修复没有造成新的问题。
 
 1.比对D:\ai coder\Projects\EnglishStudyApp\PRD\教学APP开发需求规格书.md和实际的代码实现，评估当前的实现比开发文档预期的效果更好还是更差，体现在哪里？2.输出审查报告到D:\ai coder\Projects\EnglishStudyApp\docs\review reports路径下。
+
+https://github.com/stewartleegh/EnglishStudyApp.git

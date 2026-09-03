@@ -70,8 +70,11 @@ services:
     environment:
       <<: *supabase-env
       PGRST_DB_URI: "postgres://authenticator:${POSTGRES_PASSWORD:-local-dev-postgres-password-change-me}@db:5432/postgres"
-      PGRST_DB_SCHEMAS: "${PGRST_DB_SCHEMAS:-public,storage,graphql_public}"
+      PGRST_DB_SCHEMAS: "${PGRST_DB_SCHEMAS:-public}"
       PGRST_DB_ANON_ROLE: anon
+      # v2.4 固定 user_id 过滤（T-0104）：GUC app.seed_student_id 由 ALTER ROLE anon SET
+      # 在每次 SET ROLE 时自动注入（定义见迁移 0001）。pre_config 函数作为 schema cache reload 时的冗余保障。
+      PGRST_DB_PRE_CONFIG: "postgrest.pre_config"
       PGRST_DB_MAX_ROWS: "${PGRST_DB_MAX_ROWS:-1000}"
       PGRST_DB_EXTRA_SEARCH_PATH: "${PGRST_DB_EXTRA_SEARCH_PATH:-public}"
       PGRST_JWT_SECRET: "${JWT_SECRET:-WYq4WaAyakNPiCu0dwRWiZPAVQ6+X/7NnPEU0qx2eJY=}"
