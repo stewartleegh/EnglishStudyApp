@@ -234,10 +234,24 @@ create index idx_portfolio_items_user_unit on portfolio_items (user_id, unit_no)
 create index idx_ai_call_logs_user_created on ai_call_logs (user_id, created_at);
 
 -- =============================================================================
--- 表权限授予（PostgREST 访问层）
+-- PostgREST 角色幂等创建 + 表权限授予
+-- Supabase 镜像已有 anon/authenticator/service_role（init 脚本创建）；
+-- 纯 Postgres（CI migrations job）无上述角色 → DO 幂等创建，两种环境均通过。
 -- anon：全表 CRUD（RLS 策略负责行级过滤，限制 anon 只能操作 seed 学生数据）
--- service_role：全表 CRUD（绕过 RLS，用于导入脚本 / 服务端逻辑）
+-- service_role：全表 CRUD + BYPASSRLS（绕过 RLS，用于导入脚本 / 服务端逻辑）
 -- =============================================================================
+do $$ begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon nologin;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'authenticator') then
+    create role authenticator nologin;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'service_role') then
+    create role service_role nologin bypassrls;
+  end if;
+end $$;
+
 grant usage on schema public to anon, service_role;
 grant select, insert, update, delete on all tables in schema public to anon, service_role;
 
