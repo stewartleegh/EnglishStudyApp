@@ -5,6 +5,9 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/blob-report/
 
 # next.js
 /.next/
@@ -38,3 +41,8 @@ yarn-error.log*
 # 本地诊断临时产物
 /lint.json
 /lint.log
+/debug.log
+
+# 沙箱本地重定向（浏览器二进制与 Next 缓存；常规环境无需这些目录）
+/.playwright-browsers/
+/.next-sandbox-home/

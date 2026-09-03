@@ -1,0 +1,38 @@
+# Nightly：webkit 内核 E2E（测试方案 §6：webkit 项目 nightly 跑，省 CI 时长）
+# 每日 UTC 20:00 触发（≈ 北京时间次日 04:00）；也可 workflow_dispatch 手动触发。
+
+name: CI Nightly (webkit)
+
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ci-nightly
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  e2e-webkit:
+    name: e2e (playwright webkit / iPhone 14)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps webkit
+      - run: pnpm build
+      - run: pnpm test:e2e --project=webkit
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-webkit
+          path: playwright-report/
+          retention-days: 7

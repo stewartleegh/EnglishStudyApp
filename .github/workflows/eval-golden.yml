@@ -1,0 +1,36 @@
+# LLM Golden 回归（测试方案 §5）：真调 API、产生成本 —— 不进 CI，仅手动触发。
+# 脚本由 T-0411 提供（scripts/eval-golden.ts + pnpm eval:golden），本文件先行接线。
+
+name: Eval Golden (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "prompt 版本常量（如 speaking_eval.v2）"
+        required: false
+        default: "speaking_eval.v2"
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  eval-golden:
+    name: eval:golden (${{ inputs.prompt || 'speaking_eval.v2' }})
+    runs-on: ubuntu-latest
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm eval:golden --prompt "${{ inputs.prompt }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: golden-report
+          path: evals/golden/report/
+          retention-days: 30
