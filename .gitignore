@@ -1,0 +1,40 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+*.tsbuildinfo
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# pnpm 本机局部配置与本地缓存/存储（Windows 沙箱环境用；常规环境可删除后使用全局 store）
+/.npmrc
+/.pnpm-cache
+/.pnpm-store
+
+# 本地诊断临时产物
+/lint.json
+/lint.log

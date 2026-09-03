@@ -1,0 +1,66 @@
+# Kong 声明式配置（v2.4：不启 Auth，只有 /rest/v1 与 /storage/v1 路由）
+# 对齐官方 supabase/supabase/docker/kong.yml 裁剪（去掉 auth/realtime/functions 路由）。
+# 注意：声明式配置不支持环境变量插值，key 为与 docker-compose.yml 同批生成的本地开发默认值；
+# 重新生成密钥时必须同步更新。
+_format_version: "2.1"
+_transform: true
+
+consumers:
+  - username: anon-key
+    custom_id: anon
+    keyauth_credentials:
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg4NDAyMDk4LCJleHAiOjIxMDM3NjIwOTh9.Qfp68vwlwBfN6gNcOJijI3pMaRaXhUnoucvlb32fQ
+  - username: service-role-key
+    custom_id: service_role
+    keyauth_credentials:
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODg0MDIwOTgsImV4cCI6MjEwMzc2MjA5OH0.-pHVZ2WJey7isLriraJ5XJHXMKipF8iHXSJoU1ffoPI
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - HEAD
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - apikey
+        - Content-Type
+        - Range
+        - User-Agent
+        - X-Client-Info
+      exposed_headers:
+        - Content-Range
+        - Range
+      credentials: false
+      preflight_continue: false
+  - name: key-auth
+    config:
+      key_names:
+        - apikey
+      hide_credentials: false
+      key_in_header: true
+      key_in_query: false
+
+services:
+  - name: rest-v1
+    url: http://rest:3000
+    routes:
+      - name: rest-v1-route
+        strip_path: true
+        paths:
+          - /rest/v1/
+  - name: storage-v1
+    url: http://storage:5000
+    routes:
+      - name: storage-v1-route
+        strip_path: true
+        paths:
+          - /storage/v1/

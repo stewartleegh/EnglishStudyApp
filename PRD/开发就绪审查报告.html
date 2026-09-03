@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开发就绪审查报告 — Music in English SRS v2.4</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #191919;
+    --card: #f7f7f5;
+    --border: #e5e5e5;
+    --muted: #737373;
+    --accent: #2e7d6b;
+    --accent-light: #e4f0ed;
+    --danger: #b3261e;
+    --danger-light: #fbeaea;
+    --warning: #b26a00;
+    --warning-light: #fff4e6;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.7;
+    font-size: 15px;
+    padding: 0;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Header */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 2px solid var(--border);
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .hero .subtitle { color: var(--muted); font-size: 14px; }
+  .verdict-badge {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 28px;
+    border-radius: 100px;
+    font-size: 18px;
+    font-weight: 700;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+
+  /* Section */
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 28px;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  p { margin-bottom: 12px; }
+
+  /* Summary cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .num {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .stat-card .label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--card);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  tr:hover td { background: var(--accent-light); }
+
+  /* Status indicators */
+  .ok { color: var(--accent); font-weight: 600; }
+  .warn { color: var(--warning); font-weight: 600; }
+  .fail { color: var(--danger); font-weight: 600; }
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tag-ok { background: var(--accent-light); color: var(--accent); }
+  .tag-warn { background: var(--warning-light); color: var(--warning); }
+  .tag-fail { background: var(--danger-light); color: var(--danger); }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    padding: 10px 0 10px 32px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 22px;
+    height: 22px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .checklist li.warn-item::before {
+    content: "!";
+    background: var(--warning);
+  }
+  .checklist li .item-title { font-weight: 600; }
+  .checklist li .item-desc { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* Findings */
+  .finding {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin: 16px 0;
+    border-left: 4px solid var(--border);
+  }
+  .finding.minor { border-left-color: var(--warning); }
+  .finding .finding-id {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--warning);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .finding .finding-title { font-weight: 600; margin-bottom: 8px; }
+  .finding .finding-desc { font-size: 14px; color: var(--muted); }
+
+  /* Dimension bar */
+  .dim-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0;
+  }
+  .dim-bar .dim-label { width: 160px; font-size: 14px; font-weight: 500; flex-shrink: 0; }
+  .dim-bar .dim-track {
+    flex: 1;
+    height: 10px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .dim-bar .dim-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.6s ease;
+  }
+  .dim-bar .dim-score { width: 36px; font-size: 14px; font-weight: 700; text-align: right; flex-shrink: 0; }
+
+  /* Footer */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 2px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>开发就绪审查报告</h1>
+    <div class="subtitle">Music in English · SRS v2.4（2026-09-02）· 全量文档体系审查</div>
+    <div class="verdict-badge">✓ 具备进入正式开发条件</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="num">10</div>
+      <div class="label">文档文件</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">167</div>
+      <div class="label">可寻址编号</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">155</div>
+      <div class="label">已映射任务</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">0</div>
+      <div class="label">未覆盖编号</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">9/10</div>
+      <div class="label">就绪维度</div>
+    </div>
+  </div>
+
+  <!-- Conclusion -->
+  <h2>审查结论</h2>
+  <p>经对 SRS v2.4 及 9 份配套文档的全量审查，文档体系<strong>具备进入正式开发的条件</strong>。需求规格书已完成可寻址结构化改造、需求冻结、v2.4 单用户简化及多轮独立复审，全部 167 个可寻址编号中 155 个有开发/内容任务映射、1 个约束类条目、11 个 v2.4 废止（编号保留不复用），<strong>未覆盖 0 个</strong>。技术架构、API 契约、数据模型、安全策略、测试方案、排期里程碑均已定义到可执行粒度。</p>
+  <p>存在 <strong>1 项需修复的一致性瑕疵</strong>（project_rules.md §2 技术栈表 Auth 残留）和 <strong>2 项不阻塞 W1 启动的待办事项</strong>（ASR 供应商 W5 选型、内容生产并行启动），详见下文。</p>
+
+  <!-- Dimension Scores -->
+  <h2>就绪度分维度评估</h2>
+
+  <div class="dim-bar">
+    <div class="dim-label">需求完整性</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">需求可追溯性</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">技术架构定义</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">API 契约与数据模型</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">安全与合规</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">测试方案</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">排期与里程碑</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">风险识别与对策</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">代码示例与设计规范</div>
+    <div class="dim-track"><div class="dim-fill" style="width:100%;background:var(--accent)"></div></div>
+    <div class="dim-score ok">10/10</div>
+  </div>
+  <div class="dim-bar">
+    <div class="dim-label">文档间一致性</div>
+    <div class="dim-track"><div class="dim-fill" style="width:92%;background:var(--warning)"></div></div>
+    <div class="dim-score warn">9/10</div>
+  </div>
+
+  <!-- Checklist -->
+  <h2>开发就绪逐项核查</h2>
+  <ul class="checklist">
+    <li>
+      <div class="item-title">需求规格书定稿并冻结</div>
+      <div class="item-desc">SRS v2.4（2026-09-02）定稿，§0.1 需求冻结机制已启动：仅接受缺陷修复与条款澄清</div>
+    </li>
+    <li>
+      <div class="item-title">全部需求有稳定编号可追溯</div>
+      <div class="item-desc">§0 寻址规范定义 13 类前缀（FR/NFR/LC/QUOTA/IX/DT/API/DB/SEC/STO/MS/AC/RSK），编号永不复用、永不重排</div>
+    </li>
+    <li>
+      <div class="item-title">任务清单覆盖全部需求（0 未覆盖）</div>
+      <div class="item-desc">tasks.md 含 SRS 编号→任务双向覆盖矩阵，167 编号 = 155 已映射 + 1 约束类 + 11 废止，经多轮独立复核</div>
+    </li>
+    <li>
+      <div class="item-title">技术栈固定、架构分层清晰</div>
+      <div class="item-desc">Next.js 14 App Router + TS strict + Tailwind/shadcn + DeepSeek v4-flash + Supabase 自托管 + Drizzle；lib/ai 编排层 7 组件（provider/prompts/schemas/retry/usage/guard/logger）</div>
+    </li>
+    <li>
+      <div class="item-title">API 契约完整（19 个端点，5 个废止标注）</div>
+      <div class="item-desc">§8.6 表定义全部端点的 Method/Path/输入/输出/说明；v2.4 废止的 guardian 系列 API 标注删除线且编号保留</div>
+    </li>
+    <li>
+      <div class="item-title">数据模型完整（26 张表，1 张废止）</div>
+      <div class="item-desc">§8.8 表定义所有表关键字段与唯一约束；DB-24 guardian_tokens 废止不建；DB-01 已含 consent_at 替代监护人字段</div>
+    </li>
+    <li>
+      <div class="item-title">安全策略到位（SEC-1~5，1 项废止）</div>
+      <div class="item-desc">RLS 固定 user_id 过滤、私有桶签名 URL、密钥管理、路径规范、磁盘清理策略均写入 project_rules 铁律</div>
+    </li>
+    <li>
+      <div class="item-title">测试方案映射验收标准（AC-01~11 → E1~E9）</div>
+      <div class="item-desc">测试金字塔：单测 60% + 集成 30% + E2E 10% + golden 回归；LLM 永不进 CI 真调；覆盖率门槛写入 CI</div>
+    </li>
+    <li>
+      <div class="item-title">排期里程碑（8 周 W1~W5）</div>
+      <div class="item-desc">每周交付物明确，内容生产任务（CP-01~07）与开发并行；W5 前完成 U1-U3 灌装以联调</div>
+    </li>
+    <li>
+      <div class="item-title">风险识别与对策（RSK-1~9）</div>
+      <div class="item-desc">YouTube 可用性、版权、ASR 可用性、AI 质量、存储容量、合规、流失、HTTPS 证书、大陆直连——均附对策</div>
+    </li>
+    <li>
+      <div class="item-title">代码示例覆盖关键组件</div>
+      <div class="item-desc">provider.ts 固化参数、Zod schema、prompt 版本化、API Route 编排、useRecorder hook、RLS 策略 SQL、时间工具——可编译骨架</div>
+    </li>
+    <li>
+      <div class="item-title">前端设计规范落地</div>
+      <div class="item-desc">CSS 变量映射 + tailwind.config.ts + 组件五态矩阵 + 业务组件规格 + 风格稿 HTML 预览</div>
+    </li>
+    <li>
+      <div class="item-title">流程图含异常路径推演</div>
+      <div class="item-desc">7 张 Mermaid 图（状态机/口语链路/AI 编排/内容生产/存储清理/问答流）各附正常+异常路径推演验证闭环</div>
+    </li>
+    <li>
+      <div class="item-title">课程内容已细化至 U1-U8</div>
+      <div class="item-desc">《课程内容细化-U1-U8.md》含词块/单词/语法点/句型/问答题/操作清单/评估卡观察点 + 术语对照表 + 视频检查单</div>
+    </li>
+    <li class="warn-item">
+      <div class="item-title">ASR 供应商选型（W5-W6 完成，不阻塞 W1）</div>
+      <div class="item-desc">NFR-7/§8.10 标注 ASR 成本 10-110 元区间待 W5-W6 实测定价（T-0318）；接口已定义（API-10），W1-W4 可用 fixture 开发</div>
+    </li>
+    <li class="warn-item">
+      <div class="item-title">内容生产并行启动（CP-01~07，W5 前需就绪）</div>
+      <div class="item-desc">U1-U3 内容需在 W5 前完成（CP-01~03）用于联调；U4-U8 需在 W7-W8 完成（CP-04~06）；属人工/运营依赖，不阻塞开发启动</div>
+    </li>
+  </ul>
+
+  <!-- Issues Found -->
+  <h2>发现的问题与建议</h2>
+
+  <div class="finding minor">
+    <div class="finding-id">ISSUE-01 · 需修复（不阻塞启动，建议 W1 D1 修正）</div>
+    <div class="finding-title">project_rules.md §2 技术栈表 Auth 残留</div>
+    <div class="finding-desc">
+      project_rules.md §2 技术栈表中 "DB/Auth/Storage" 行仍标注 "Postgres + Auth + Storage"，与 SRS v2.4 NFR-3 "v2.4 不启 Auth" 及 project_rules §5.1 "v2.4 单用户模式不启 Supabase Auth" 不一致。<br><br>
+      <strong>修复建议</strong>：将 §2 表该行改为 "DB/Storage" + "Postgres + Storage（v2.4 不启 Auth）"，与 §5.1 口径统一。属 §0.1 冻结期内的条款澄清范畴，不需变更评审。
+    </div>
+  </div>
+
+  <div class="finding minor">
+    <div class="finding-id">ISSUE-02 · 关注项（W5-W6 解决）</div>
+    <div class="finding-title">ASR 供应商未最终选型</div>
+    <div class="finding-desc">
+      RSK-3 对策中 ASR 主路径为"云端 Whisper 兼容服务（国内供应商优先）"，但具体供应商未定（成本区间 10-110 元差异大）。任务 T-0318 安排在 W5-W6 完成选型实测。<br><br>
+      <strong>影响评估</strong>：不阻塞 W1-W4 开发——API-10 接口已定义，开发期间用 MSW fixture 模拟；选型完成后仅需切换环境变量，不改代码路径。
+    </div>
+  </div>
+
+  <div class="finding minor">
+    <div class="finding-id">ISSUE-03 · 关注项（W5 前启动）</div>
+    <div class="finding-title">内容生产需与开发同步启动</div>
+    <div class="finding-desc">
+      CP-01~03（U1-U3 视频筛选/切片/字幕校对/语言内容标注）需在 W5 前完成，否则 T-0317 联调无法使用真实内容。这是人工/运营依赖而非文档缺陷。<br><br>
+      <strong>建议</strong>：W1 启动开发的同时立即启动内容生产流程，确保 W5 前 U1-U3 内容入库。
+    </div>
+  </div>
+
+  <!-- Document Inventory -->
+  <h2>文档清单与审查状态</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>文档</th>
+        <th>版本</th>
+        <th>核心内容</th>
+        <th>状态</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>教学APP开发需求规格书.md</td>
+        <td>v2.4</td>
+        <td>167 编号需求 · 架构/API/DB/安全/验收/风险全定义</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>project_rules.md</td>
+        <td>v2.4 同步</td>
+        <td>12 章 AI 编程约束铁律（§2 技术栈表有 1 处 Auth 残留）</td>
+        <td><span class="tag tag-warn">微调</span></td>
+      </tr>
+      <tr>
+        <td>开发任务清单.md</td>
+        <td>v2.4 同步</td>
+        <td>~50 开发任务 + 7 内容任务 + SRS 覆盖矩阵（0 未覆盖）</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>测试方案.md</td>
+        <td>v2.4 同步</td>
+        <td>单测/集成/E2E/golden 四层 + 排期映射</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>流程图与推演.md</td>
+        <td>v2.4 同步</td>
+        <td>7 张 Mermaid 图 + 正常/异常路径推演</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>代码示例.md</td>
+        <td>v2.4 改写</td>
+        <td>13 节可编译骨架（provider/schema/prompt/API/hook/RLS/time）</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>前端设计规范-主题配置与组件状态.md</td>
+        <td>—</td>
+        <td>CSS 变量 + tailwind.config + 组件五态 + 业务组件规格</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>用英语学音乐课程设计方案.md</td>
+        <td>v2.1</td>
+        <td>8 单元课程设计 + 教学口径 + 频道池 + 评估卡</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>课程内容细化-U1-U8.md</td>
+        <td>—</td>
+        <td>U1-U8 词块/单词/语法/问答题/操作清单 + 术语表 + 检查单</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+      <tr>
+        <td>风格稿-style-guide.html</td>
+        <td>—</td>
+        <td>视觉预览（设计 Token 落地效果）</td>
+        <td><span class="tag tag-ok">就绪</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- v2.4 Change Trace -->
+  <h2>v2.4 变更追踪完整性</h2>
+  <p>SRS v2.4 从 v2.0 起经历 4 次版本迭代，每次变更均附带变更摘要 + 修订记录表（含修订编号 → 内容 → 落点编号索引），变更影响面已传播至全部配套文档：</p>
+  <table>
+    <thead>
+      <tr>
+        <th>版本</th>
+        <th>关键变更</th>
+        <th>修订记录</th>
+        <th>配套同步</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>v2.0</td>
+        <td>吉他 10 级初中生 + YouTube 嵌入 + DeepSeek API + 实操锚点录像</td>
+        <td>—</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>v2.1</td>
+        <td>可寻址改造 + 13 项审查修复 + 6 项优化</td>
+        <td>FA-01~13 + G-1~6</td>
+        <td>审查报告归档</td>
+      </tr>
+      <tr>
+        <td>v2.2</td>
+        <td>问答系统 + 教学口径定案 + 需求冻结</td>
+        <td>V22-01~13</td>
+        <td>全套文档同步</td>
+      </tr>
+      <tr>
+        <td>v2.3</td>
+        <td>纯本地部署（移除 Vercel 云模式）</td>
+        <td>V23-1</td>
+        <td>project_rules/测试方案/流程图/课程设计 同步</td>
+      </tr>
+      <tr>
+        <td>v2.4</td>
+        <td>单用户模式（移除注册/认证/监护人链路）</td>
+        <td>V23-2 + FIX-01~09</td>
+        <td>全部 9 份配套文档同步 + 独立复审</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Final Recommendation -->
+  <h2>启动建议</h2>
+  <h3>W1 D1 立即可启动</h3>
+  <p>文档体系已具备进入正式开发的全部条件。建议从 <strong>T-0101</strong>（Fork 脚手架 + 目录骨架 + Docker Compose 初始化）开始，按 tasks.md W1-W2 批次顺序推进。同时立即启动内容生产流程（CP-01~03）。</p>
+
+  <h3>W1 内完成</h3>
+  <p>修正 ISSUE-01（project_rules §2 技术栈表 Auth 残留），属条款澄清范畴不需变更评审。在首次 PR 中一并修正即可。</p>
+
+  <h3>W5 前完成</h3>
+  <p>U1-U3 内容灌装（CP-01~03）就绪，用于 T-0317 联调。ASR 供应商选型实测（T-0318），确定成本后在 API-10 切换真实服务。</p>
+
+  <div class="footer">
+    审查报告生成于 2026-09-02 · 基于全量文档审查 · SRS v2.4（2026-09-02）
+  </div>
+
+</div>
+</body>
+</html>

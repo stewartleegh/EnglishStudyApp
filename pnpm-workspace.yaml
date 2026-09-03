@@ -1,0 +1,11 @@
+# pnpm 11 配置（package.json 的 pnpm 字段与 .npmrc 的 store/cache 设置已废弃）
+# store/cache 放项目内（.gitignore 已忽略），避免本机沙箱限制写用户全局目录。
+# 用相对路径以保证可移植（CI / Linux / 其他开发机均解析到 <repo>/.pnpm-store）。
+storeDir: .pnpm-store
+cacheDir: .pnpm-cache
+# 跳过 run 前自动 install 校验（锁文件已入库，CI 显式 install）
+verifyDepsBeforeRun: false
+# pnpm 11：onlyBuiltDependencies 已废弃，改用 allowBuilds（包名→布尔映射）。
+# unrs-resolver（eslint-config-next 的解析器原生绑定）需运行构建脚本拉取预编译二进制。
+allowBuilds:
+  unrs-resolver: true

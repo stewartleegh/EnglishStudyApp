@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music in English — 可视化风格稿（DT-1～DT-7）</title>
+<style>
+  :root{
+    --background:#FFFFFF; --foreground:#191919; --card:#F7F7F5;
+    --muted-foreground:#737373; --border:#E5E5E5;
+    --accent:#2E7D6B; --accent-hover:#256A5B; --accent-active:#1F5A4D;
+    --accent-subtle:#E4F0ED;
+    --danger:#B3261E; --danger-subtle:#FAEBEA; --warning:#B26A00;
+    --radius:6px; --radius-sm:4px; --shadow-pop:0 2px 8px rgb(0 0 0 / .08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--background); color:var(--foreground);
+    font-family:Inter,"Source Han Sans SC","Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.6; padding:32px 16px 96px;
+  }
+  .wrap{max-width:672px;margin:0 auto}
+  h1{font-size:24px;line-height:32px;font-weight:600;margin-bottom:4px}
+  h2{font-size:18px;line-height:28px;font-weight:600;margin:40px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  .sub{color:var(--muted-foreground);font-size:13px}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;margin-top:12px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  /* 色板 */
+  .swatch{width:96px}
+  .swatch .box{height:56px;border-radius:var(--radius);border:1px solid var(--border)}
+  .swatch .name{font-size:12px;margin-top:6px}
+  .swatch .hex{font-size:12px;color:var(--muted-foreground)}
+  /* 按钮 */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;
+    padding:0 16px;border-radius:var(--radius-sm);font-size:15px;border:1px solid transparent;cursor:pointer}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary.hover{background:var(--accent-hover)}
+  .btn-primary.active{background:var(--accent-active)}
+  .btn-secondary{background:var(--card);color:var(--foreground);border-color:var(--border)}
+  .btn-secondary.hover{background:var(--accent-subtle)}
+  .btn-ghost{color:var(--muted-foreground)}
+  .btn-ghost.hover{color:var(--foreground);background:var(--accent-subtle)}
+  .btn-link{background:none;color:var(--accent);height:auto;padding:0;text-underline-offset:4px}
+  .btn-link.hover{text-decoration:underline}
+  .btn.disabled{opacity:.4;pointer-events:none}
+  .focus-demo{outline:2px solid var(--accent);outline-offset:2px}
+  .spinner{width:16px;height:16px;border:2px solid rgb(255 255 255 / .4);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* 表单 */
+  .input{height:44px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;width:220px;background:#fff;color:var(--foreground)}
+  .input.focus-demo{border-color:var(--border)}
+  .input.error{border-color:var(--danger)}
+  .err-text{color:var(--danger);font-size:13px;margin-top:4px}
+  /* 选择题选项 */
+  .opt{display:flex;align-items:center;min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:8px;background:#fff}
+  .opt.selected{background:var(--accent-subtle);border-left:2px solid var(--accent)}
+  /* checklist */
+  .chk{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 4px}
+  .chk .box{width:18px;height:18px;border:1.5px solid var(--border);border-radius:var(--radius-sm);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+  .chk.done .box{background:var(--accent);border-color:var(--accent)}
+  .chk.done .txt{color:var(--muted-foreground)}
+  /* 进度状态 */
+  .st{font-size:20px;color:var(--muted-foreground)}
+  .st.on{color:var(--accent)}
+  /* 骨架屏 */
+  .skel{background:linear-gradient(90deg,var(--card) 25%,#fff 50%,var(--card) 75%);background-size:200px 100%;animation:shimmer 1.4s linear infinite;border-radius:var(--radius-sm)}
+  @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:calc(200px + 100%) 0}}
+  /* 呼吸点 */
+  .breath{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:breath 1.6s ease-in-out infinite;display:inline-block}
+  @keyframes breath{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+  /* 反馈卡 */
+  .scorebar{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:6px}
+  .scorebar i{display:block;height:100%;background:var(--accent)}
+  .highlight{background:var(--accent-subtle);border-radius:var(--radius-sm);padding:8px 12px;margin-top:12px}
+  /* 热力图 */
+  .heat{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:12px;max-width:420px}
+  .heat i{aspect-ratio:1;border-radius:2px;background:#E5E5E5}
+  /* diff */
+  .del{text-decoration:line-through;color:var(--muted-foreground)}
+  .add{background:var(--accent-subtle);border-radius:2px;padding:0 2px}
+  .tag{display:inline-block;background:var(--card);color:var(--muted-foreground);border-radius:var(--radius-sm);font-size:12px;padding:2px 8px}
+  .empty{text-align:center;max-width:320px;margin:12px auto;padding:32px 0}
+  .empty .ic{font-size:20px;color:var(--muted-foreground)}
+  .empty p{color:var(--muted-foreground);font-size:13px;margin:8px 0 12px}
+  .fixedbar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 16px calc(12px + env(safe-area-inset-bottom));margin-top:12px}
+  @media (prefers-reduced-motion: reduce){.breath,.skel,.spinner{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Music in English · 可视化风格稿</h1>
+  <p class="sub">DT-1～DT-7 落地预览 · 仅浅色 · 唯一强调色 #2E7D6B · 无渐变 / 无徽章奖杯 · 配套《前端设计规范-主题配置与组件状态.md》</p>
+
+  <h2>1 · 色板</h2>
+  <div class="row">
+    <div class="swatch"><div class="box" style="background:#FFFFFF"></div><div class="name">主背景</div><div class="hex">#FFFFFF</div></div>
+    <div class="swatch"><div class="box" style="background:#F7F7F5"></div><div class="name">卡片底</div><div class="hex">#F7F7F5</div></div>
+    <div class="swatch"><div class="box" style="background:#191919"></div><div class="name">正文</div><div class="hex">#191919</div></div>
+    <div class="swatch"><div class="box" style="background:#737373"></div><div class="name">次要文字</div><div class="hex">#737373</div></div>
+    <div class="swatch"><div class="box" style="background:#E5E5E5"></div><div class="name">分隔线</div><div class="hex">#E5E5E5</div></div>
+  </div>
+  <div class="row">
+    <div class="swatch"><div class="box" style="background:#2E7D6B"></div><div class="name">强调色</div><div class="hex">#2E7D6B</div></div>
+    <div class="swatch"><div class="box" style="background:#256A5B"></div><div class="name">hover</div><div class="hex">#256A5B</div></div>
+    <div class="swatch"><div class="box" style="background:#1F5A4D"></div><div class="name">active</div><div class="hex">#1F5A4D</div></div>
+    <div class="swatch"><div class="box" style="background:#E4F0ED"></div><div class="name">浅底选中</div><div class="hex">#E4F0ED</div></div>
+  </div>
+  <div class="row">
+    <div class="swatch"><div class="box" style="background:#B3261E"></div><div class="name">错误（功能色）</div><div class="hex">#B3261E</div></div>
+    <div class="swatch"><div class="box" style="background:#FAEBEA"></div><div class="name">错误浅底</div><div class="hex">#FAEBEA</div></div>
+    <div class="swatch"><div class="box" style="background:#B26A00"></div><div class="name">告警（功能色）</div><div class="hex">#B26A00</div></div>
+  </div>
+
+  <h2>2 · 字体层级</h2>
+  <div class="card">
+    <div style="font-size:24px;font-weight:600">页面标题 Display 24/600</div>
+    <div style="font-size:18px;font-weight:600;margin-top:8px">卡片标题 Title 18/600</div>
+    <div style="margin-top:8px">正文 Body 15px — The C major scale has no sharps or flats. 音阶公式 W-W-H-W-W-W-H。</div>
+    <div class="sub" style="margin-top:8px">辅助 Small 13px — AI 三维分仅作反馈参考</div>
+    <div style="font-size:12px;color:var(--muted-foreground);margin-top:8px">角标 Tiny 12px — AI 评分为学习反馈参考，非权威语言测评</div>
+  </div>
+
+  <h2>3 · 按钮（4 变体 × 5 态）</h2>
+  <div class="card">
+    <div class="row">
+      <button class="btn btn-primary">提交</button>
+      <button class="btn btn-primary hover">hover</button>
+      <button class="btn btn-primary active">active</button>
+      <button class="btn btn-primary focus-demo">focus-visible</button>
+      <button class="btn btn-primary disabled">disabled</button>
+      <button class="btn btn-primary"><span class="spinner"></span>评估中…</button>
+    </div>
+    <div class="row">
+      <button class="btn btn-secondary">再录一次</button>
+      <button class="btn btn-secondary hover">hover</button>
+      <button class="btn btn-ghost">稍后再来</button>
+      <button class="btn btn-ghost hover">hover</button>
+      <button class="btn btn-link">查看解析</button>
+      <button class="btn btn-link hover">hover</button>
+    </div>
+    <p class="sub" style="margin-top:8px">录音/录像/提交主按钮底部固定、高 ≥48px（见第 9 节）；禁用 = 透明度 40% + 禁止点击。</p>
+  </div>
+
+  <h2>4 · 表单与选项</h2>
+  <div class="card">
+    <div class="row">
+      <input class="input" value="默认输入" readonly>
+      <input class="input focus-demo" value="focus 环 2px accent" readonly>
+    </div>
+    <div class="row" style="align-items:flex-start">
+      <div>
+        <input class="input error" value="错误态输入" readonly>
+        <div class="err-text">请填写一句英语感想再入档</div>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:12px">L2 选择题选项（整行 ≥44px 可点）：</p>
+    <div class="opt">A. Two frets apart</div>
+    <div class="opt selected">B. One fret apart ✓ 选中 = 浅底 + 左侧强调色竖条</div>
+    <div class="opt">C. Two strings apart</div>
+    <p class="sub" style="margin-top:12px">操作清单（勾选后文字变次要色 + 打勾 150ms 淡入）：</p>
+    <div class="chk done"><span class="box">✓</span><span class="txt">已在两个把位弹出 C 大调音阶</span></div>
+    <div class="chk"><span class="box"></span><span class="txt">找到两个 half step 的位置（E–F 与 B–C）</span></div>
+  </div>
+
+  <h2>5 · 进度与状态（DT-7：○◐●，不用徽章奖杯）</h2>
+  <div class="card">
+    <div class="row" style="font-size:20px">
+      <span class="st">○</span><span class="sub">未解锁</span>
+      <span class="st on">◐</span><span class="sub">进行中</span>
+      <span class="st on">●</span><span class="sub">已完成</span>
+      <span style="flex:1"></span>
+      <span class="tag">乐理</span><span class="tag">风格</span><span class="tag">创作</span>
+      <span class="sub">素养线标签统一灰底，不配彩色</span>
+    </div>
+    <div style="margin-top:16px">
+      <div class="sub">单元进度细条</div>
+      <div class="scorebar" style="height:4px"><i style="width:33%"></i></div>
+      <div class="sub" style="margin-top:4px">U2 和弦 · 2/6</div>
+    </div>
+    <p class="sub" style="margin-top:16px">打卡热力图（accent 25%/50%/75%/100% 四档透明度）：</p>
+    <div class="heat">
+      <i></i><i></i><i style="background:#2E7D6B40"></i><i></i><i style="background:#2E7D6B80"></i><i style="background:#2E7D6B"></i><i></i>
+      <i style="background:#2E7D6B40"></i><i></i><i style="background:#2E7D6BBF"></i><i style="background:#2E7D6B80"></i><i></i><i style="background:#2E7D6B40"></i><i style="background:#2E7D6B"></i>
+      <i style="background:#2E7D6B"></i><i style="background:#2E7D6B80"></i><i></i><i></i><i style="background:#2E7D6B40"></i><i style="background:#2E7D6BBF"></i><i style="background:#2E7D6B"></i>
+      <i></i><i style="background:#2E7D6B40"></i><i style="background:#2E7D6B"></i><i style="background:#2E7D6B80"></i><i></i><i></i><i style="background:#2E7D6B40"></i>
+    </div>
+  </div>
+
+  <h2>6 · 业务组件</h2>
+  <div class="card">
+    <div style="font-weight:600">词块卡（正面）</div>
+    <div style="margin-top:8px;font-size:18px">leave some space <span style="color:var(--accent);cursor:pointer">🔊</span></div>
+    <div class="sub">点卡片翻面看释义与例句</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-secondary" style="height:36px">陌生</button>
+      <button class="btn btn-secondary" style="height:36px;background:var(--accent-subtle)">模糊</button>
+      <button class="btn btn-secondary" style="height:36px">掌握</button>
+      <span class="sub">三档自评用文字 + accent 选中态，不用红黄绿灯</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:600">AI 反馈卡（IX-5 固定结构）</div>
+    <div style="margin-top:12px" class="sub">完整度 4/5</div><div class="scorebar"><i style="width:80%"></i></div>
+    <div style="margin-top:8px" class="sub">流利度 3/5</div><div class="scorebar"><i style="width:60%;opacity:.65"></i></div>
+    <div style="margin-top:8px" class="sub">清晰度 4/5</div><div class="scorebar"><i style="width:80%;opacity:.35"></i></div>
+    <div class="highlight">亮点：You used "the pattern goes" correctly — great chunk!</div>
+    <ol style="margin:12px 0 0 20px;font-size:15px">
+      <li>改进：half step 说成了 "half feet" → 示范：A half step is one fret.</li>
+      <li>改进：语速偏快 → 示范：Try "play it slowly" between phrases.</li>
+    </ol>
+    <div class="row" style="margin-top:12px">
+      <span class="sub">这条反馈有用吗</span>
+      <button class="btn btn-ghost" style="height:36px">👍</button>
+      <button class="btn btn-ghost" style="height:36px">👎</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:600">写作版本 diff（不用红绿双色）</div>
+    <p style="margin-top:8px">The blues <span class="del">begin</span><span class="add">began</span> in the American South. People <span class="del">sing</span><span class="add">sang</span> work songs in the fields.</p>
+  </div>
+
+  <h2>7 · 录像中 / 加载 / 空态 / 降级</h2>
+  <div class="card">
+    <div class="row"><span class="breath"></span><span>录制中 01:32</span><span class="sub">（剩余 30 秒时计时转告警色）</span><span style="color:var(--warning)">02:30 即将结束</span></div>
+    <p class="sub" style="margin-top:16px">AI 反馈骨架屏（≤10s，超时切降级文案）：</p>
+    <div class="skel" style="height:6px;width:60%;margin-top:8px"></div>
+    <div class="skel" style="height:14px;width:90%;margin-top:12px"></div>
+    <div class="skel" style="height:14px;width:75%;margin-top:8px"></div>
+    <div class="card" style="margin-top:16px;border:1px dashed var(--border);background:#fff">
+      <span class="sub">反馈稍后送达，不影响过关（NFR-5 降级态，不显示红色错误页）</span>
+    </div>
+    <div class="empty">
+      <div class="ic">▢</div>
+      <p>今天没有待复习的词卡</p>
+      <button class="btn btn-secondary" style="height:40px">去逛逛课程地图</button>
+    </div>
+    <div style="background:var(--danger-subtle);border-radius:var(--radius);padding:12px;margin-top:4px">
+      <span style="color:var(--danger);font-size:13px">⚠ 成长曲线加载失败</span>
+      <button class="btn btn-ghost" style="height:32px;margin-left:8px">重试</button>
+      <span class="sub" style="margin-left:8px">（不阻塞过关，LC-L6）</span>
+    </div>
+  </div>
+
+  <h2>8 · 关卡页统一骨架（§7.3）</h2>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:600">U1 · L2 看懂视频</span><span class="sub">任务卡 ▾ · 20′</span>
+    </div>
+    <div style="padding:24px 16px;color:var(--muted-foreground)">中部主操作区（播放器 / 录音 / 编辑器）</div>
+    <div class="fixedbar"><button class="btn btn-primary" style="width:100%;height:48px">提交并继续</button></div>
+  </div>
+
+  <p class="sub" style="margin-top:40px">红线：仅浅色 · 无渐变 · 无徽章/奖杯 · 功能色仅文字图标 · 动效 ≤200ms · prefers-reduced-motion 关闭 breath/shimmer · 点击目标 ≥44px · 对比度 ≥4.5:1</p>
+
+</div>
+</body>
+</html>

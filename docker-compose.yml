@@ -1,0 +1,139 @@
+# Supabase 自托管本地开发栈（T-0101，v2.4 单用户：不启 Auth）
+# 依据 SRS NFR-3 / MS-W1，对齐官方 compose（github.com/supabase/supabase/docker）裁剪：
+#   db      supabase/postgres     —— Postgres 本体（RLS、迁移所在地）
+#   rest    postgrest             —— PostgREST（supabase-js 的 /rest/v1）
+#   storage supabase/storage-api  —— 私有桶 + 签名 URL（/storage/v1）
+#   kong    API 网关              —— 统一入口 :8000，路由 /rest/v1、/storage/v1
+# 未启用：Auth(gotrue)/Realtime/Studio/Edge Functions/Logs（v2.4 不需要）。
+# RLS 由数据库迁移启用（T-0104）；v2.4 固定 user_id 过滤，不依赖 auth.uid()。
+#
+# 用法：docker compose up -d（需本机已装 Docker；生产/试用部署详见 T-0118 部署套件与 README）
+# 密钥（本地开发默认值；生产必须更换，重新运行 node scripts/generate-supabase-keys.mjs
+#      后同步更新本文件与 supabase/kong.yml 的默认值，或通过 .env 覆盖）：
+#   JWT_SECRET       WYq4WaAyakNPiCu0dwRWiZPAVQ6+X/7NnPEU0qx2eJY=
+#   ANON_KEY         eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg4NDAyMDk4LCJleHAiOjIxMDM3NjIwOTh9.Qfp68vwlwBfN6gNcOJijI3pMaRaXhUnoucvlb32fQ
+#   SERVICE_ROLE_KEY eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODg0MDIwOTgsImV4cCI6MjEwMzc2MjA5OH0.-pHVZ2WJey7isLriraJ5XJHXMKipF8iHXSJoU1ffoPI
+
+name: esapp-supabase
+
+x-supabase-env: &supabase-env
+  POSTGRES_PASSWORD: &postgres-password ${POSTGRES_PASSWORD:-local-dev-postgres-password-change-me}
+  JWT_SECRET: &jwt-secret ${JWT_SECRET:-WYq4WaAyakNPiCu0dwRWiZPAVQ6+X/7NnPEU0qx2eJY=}
+  ANON_KEY: &anon-key ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzg4NDAyMDk4LCJleHAiOjIxMDM3NjIwOTh9.Qfp68vwlwBfN6gNcOJijI3pMaRaXhUnoucvlb32fQ}
+  SERVICE_ROLE_KEY: &service-role-key ${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODg0MDIwOTgsImV4cCI6MjEwMzc2MjA5OH0.-pHVZ2WJey7isLriraJ5XJHXMKipF8iHXSJoU1ffoPI}
+
+services:
+  db:
+    image: supabase/postgres:17.6.1.136
+    container_name: esapp-supabase-db
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # 复制官方 roles.sql/jwt.sql（密码与 JWT 设置，见 supabase/init/）
+      - ./supabase/init/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./supabase/init/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgresql-custom
+    environment:
+      <<: *supabase-env
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: "${POSTGRES_PORT:-5432}"
+      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_EXP: "${JWT_EXPIRY:-3600}"
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rest:
+    image: postgrest/postgrest:v14.12
+    container_name: esapp-supabase-rest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    environment:
+      <<: *supabase-env
+      PGRST_DB_URI: "postgres://authenticator:${POSTGRES_PASSWORD:-local-dev-postgres-password-change-me}@db:5432/postgres"
+      PGRST_DB_SCHEMAS: "${PGRST_DB_SCHEMAS:-public,storage,graphql_public}"
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_MAX_ROWS: "${PGRST_DB_MAX_ROWS:-1000}"
+      PGRST_DB_EXTRA_SEARCH_PATH: "${PGRST_DB_EXTRA_SEARCH_PATH:-public}"
+      PGRST_JWT_SECRET: "${JWT_SECRET:-WYq4WaAyakNPiCu0dwRWiZPAVQ6+X/7NnPEU0qx2eJY=}"
+      PGRST_APP_SETTINGS_JWT_SECRET: "${JWT_SECRET:-WYq4WaAyakNPiCu0dwRWiZPAVQ6+X/7NnPEU0qx2eJY=}"
+      PGRST_APP_SETTINGS_JWT_EXP: "${JWT_EXPIRY:-3600}"
+
+  storage:
+    image: supabase/storage-api:v1.60.4
+    container_name: esapp-supabase-storage
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:5000/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      <<: *supabase-env
+      SERVICE_KEY: "${SERVICE_ROLE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODg0MDIwOTgsImV4cCI6MjEwMzc2MjA5OH0.-pHVZ2WJey7isLriraJ5XJHXMKipF8iHXSJoU1ffoPI}"
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: "${JWT_SECRET:-WYq4WaAyakNPiCu0dwRWiZPAVQ6+X/7NnPEU0qx2eJY=}"
+      DATABASE_URL: "postgres://supabase_storage_admin:${POSTGRES_PASSWORD:-local-dev-postgres-password-change-me}@db:5432/postgres"
+      STORAGE_PUBLIC_URL: "${SUPABASE_PUBLIC_URL:-http://localhost:8000}"
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: "52428800"
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: "${GLOBAL_S3_BUCKET:-stub}"
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: "${STORAGE_TENANT_ID:-stub}"
+      REGION: "${REGION:-local}"
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - storage-data:/var/lib/storage
+
+  kong:
+    image: kong:2.8.1
+    container_name: esapp-supabase-kong
+    restart: unless-stopped
+    depends_on:
+      rest:
+        condition: service_started
+      storage:
+        condition: service_started
+    ports:
+      - "${KONG_HTTP_PORT:-8000}:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: cors,key-auth
+      KONG_LOG_LEVEL: "${KONG_LOG_LEVEL:-notice}"
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 128k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 4 256k
+    volumes:
+      - ./supabase/kong.yml:/home/kong/kong.yml:ro
+
+volumes:
+  db-data:
+  db-config:
+  storage-data:
